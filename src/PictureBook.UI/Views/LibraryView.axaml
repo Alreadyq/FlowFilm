@@ -2,40 +2,147 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PictureBook.UI.Views.LibraryView">
 
+  <UserControl.Resources>
+
+    <!-- 分段筛选（RadioButton 自定义模板） -->
+    <ControlTheme x:Key="SegTheme" TargetType="RadioButton">
+      <Setter Property="Padding" Value="12,5" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="FontSize" Value="12.5" />
+      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter x:Name="PART_ContentPresenter"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}"
+                            Content="{TemplateBinding Content}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center" />
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#1FFFFFFF" />
+      </Style>
+      <Style Selector="^:checked">
+        <Setter Property="Background" Value="#3D4C8DFF" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+      </Style>
+    </ControlTheme>
+
+  </UserControl.Resources>
+
   <UserControl.Styles>
 
+    <!-- 工具栏按钮 -->
     <Style Selector="Button.tool">
-      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="Padding" Value="13,6" />
       <Setter Property="CornerRadius" Value="7" />
       <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Medium" />
     </Style>
     <Style Selector="Button.tool.primary">
       <Setter Property="Background" Value="{StaticResource AccentBrush}" />
       <Setter Property="Foreground" Value="White" />
     </Style>
-    <Style Selector="Button.tool:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#33888888" />
-    </Style>
     <Style Selector="Button.tool.primary:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#E60A84FF" />
+      <Setter Property="Background" Value="#664C8DFF" />
     </Style>
 
+    <!-- 照片卡片 -->
     <Style Selector="Border.tile">
       <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-      <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+      <Setter Property="BorderBrush" Value="#1AFFFFFF" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="CornerRadius" Value="10" />
       <Setter Property="ClipToBounds" Value="True" />
       <Setter Property="Margin" Value="0,0,12,12" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.12" />
+        </Transitions>
+      </Setter>
     </Style>
     <Style Selector="Border.tile:pointerover">
-      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="#AA4C8DFF" />
     </Style>
 
-    <Style Selector="TextBlock.badge">
+    <!-- 旗标角标：入选蓝 / 排除红 -->
+    <Style Selector="Border.flagbadge">
+      <Setter Property="Width" Value="21" />
+      <Setter Property="Height" Value="21" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="Background" Value="#F04C8DFF" />
+      <Setter Property="HorizontalAlignment" Value="Right" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Margin" Value="8" />
+      <Setter Property="BoxShadow" Value="0 1 4 #66000000" />
+    </Style>
+    <Style Selector="Border.flagbadge.reject">
+      <Setter Property="Background" Value="#F0E5484D" />
+    </Style>
+    <Style Selector="Border.flagbadge TextBlock">
       <Setter Property="FontSize" Value="11" />
       <Setter Property="FontWeight" Value="Bold" />
       <Setter Property="Foreground" Value="White" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- RAW / 格式角标 -->
+    <Style Selector="Border.extbadge">
+      <Setter Property="Background" Value="#B3000000" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="5,1" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Margin" Value="8" />
+    </Style>
+    <Style Selector="Border.extbadge TextBlock">
+      <Setter Property="FontSize" Value="9.5" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="#E6FFFFFF" />
+    </Style>
+
+    <!-- 加载指示：旋转虚线圆环（Avalonia 11 无内置 spinner） -->
+    <Style Selector="Ellipse.spinner">
+      <Setter Property="Stroke" Value="#8CFFFFFF" />
+      <Setter Property="StrokeThickness" Value="2" />
+      <Setter Property="StrokeDashArray" Value="3,2.2" />
+      <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
+      <Setter Property="RenderTransform">
+        <Setter.Value>
+          <RotateTransform />
+        </Setter.Value>
+      </Setter>
+      <Style.Animations>
+        <Animation Duration="0:0:1.1" IterationCount="Infinite">
+          <KeyFrame Cue="0%">
+            <Setter Property="RotateTransform.Angle" Value="0" />
+          </KeyFrame>
+          <KeyFrame Cue="100%">
+            <Setter Property="RotateTransform.Angle" Value="360" />
+          </KeyFrame>
+        </Animation>
+      </Style.Animations>
+    </Style>
+
+    <!-- 悬停字幕：默认隐藏，卡片悬停时淡入 -->
+    <Style Selector="Border.caption">
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="VerticalAlignment" Value="Bottom" />
+      <Setter Property="Padding" Value="10,14,10,7" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.tile:pointerover Border.caption">
+      <Setter Property="Opacity" Value="1" />
     </Style>
 
   </UserControl.Styles>
@@ -45,33 +152,41 @@
     <!-- 工具栏 -->
     <Border Grid.Row="0" Background="{StaticResource ChromeBrush}"
             BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="16,10">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="16,9">
         <Button x:Name="ImportButton" Classes="tool primary" Content="导入文件夹…"
                 IsEnabled="{Binding !IsBusy}" Click="OnImportClick" />
-        <ComboBox Grid.Column="1" Margin="12,0,0,0" MinWidth="110"
-                  ItemsSource="{Binding Filters}"
-                  SelectedIndex="0"
-                  SelectionChanged="OnFilterChanged"
-                  IsEnabled="{Binding !IsBusy}">
-          <ComboBox.ItemTemplate>
+        <ItemsControl Grid.Column="1" ItemsSource="{Binding Filters}" Margin="14,0,0,0"
+                      VerticalAlignment="Center">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="4" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <TextBlock Text="{Binding Label}" FontSize="13" />
+              <RadioButton Classes="seg" Theme="{StaticResource SegTheme}"
+                           GroupName="libfilter"
+                           Content="{Binding Label}"
+                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                           Checked="OnFilterChecked"
+                           IsEnabled="{Binding !IsBusy}" />
             </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
-        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8"
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="9"
                     VerticalAlignment="Center" IsEnabled="{Binding !IsBusy}">
           <TextBlock Text="缩略图" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
-          <Slider x:Name="SizeSlider" Minimum="120" Maximum="320" Width="140"
+          <Slider x:Name="SizeSlider" Minimum="120" Maximum="320" Width="130"
                   Value="{Binding TileSize}" ValueChanged="OnSizeValueChanged" />
         </StackPanel>
         <TextBlock Grid.Column="4" Text="{Binding StatusText}" FontSize="12"
                    Foreground="{StaticResource TextSecondaryBrush}"
-                   VerticalAlignment="Center" Margin="14,0,0,0" />
+                   VerticalAlignment="Center" Margin="14,0,0,0" MaxWidth="420"
+                   TextTrimming="CharacterEllipsis" />
       </Grid>
     </Border>
 
-    <!-- 网格：行级虚拟化（VirtualizingStackPanel 按行实现/回收） -->
+    <!-- 网格：行级虚拟化 -->
     <Panel Grid.Row="1">
       <ScrollViewer x:Name="GridScroller" Padding="16,14">
         <ItemsControl x:Name="Grid" ItemsSource="{Binding Rows}">
@@ -96,35 +211,36 @@
                             DetachedFromVisualTree="OnTileDetached"
                             Tapped="OnTileTapped">
                       <Panel>
-                        <!-- 占位 -->
-                        <StackPanel IsVisible="{Binding ShowPlaceholder}"
-                                    HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
-                          <TextBlock Text="载入中…" FontSize="12"
-                                     Foreground="{StaticResource TextTertiaryBrush}"
-                                     HorizontalAlignment="Center" />
-                        </StackPanel>
-                        <!-- 缩略图 -->
-                        <Image Source="{Binding Thumb}" Stretch="Uniform" />
-                        <!-- 扩展名角标 -->
-                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6,6,0,0"
-                                Background="#B3000000" CornerRadius="4" Padding="5,1"
-                                IsVisible="{Binding ShowPlaceholder}">
-                          <TextBlock Classes="badge" Text="{Binding ExtBadge}" />
-                        </Border>
+                        <!-- 缩略图：铺满裁切 -->
+                        <Image Source="{Binding Thumb}" Stretch="UniformToFill" />
+                        <!-- 占位：载入中 -->
+                        <Panel IsVisible="{Binding ShowPlaceholder}"
+                               Background="{StaticResource SurfaceBrush}">
+                          <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Ellipse Classes="spinner" Width="18" Height="18" />
+                          </Panel>
+                          <Border Classes="extbadge" IsVisible="{Binding ShowPlaceholder}">
+                            <TextBlock Text="{Binding ExtBadge}" />
+                          </Border>
+                        </Panel>
                         <!-- 旗标角标 -->
-                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,6,0"
-                                CornerRadius="4" Padding="7,1"
-                                Background="#E60A84FF"
+                        <Border Classes="flagbadge" Classes.reject="{Binding IsReject}"
                                 IsVisible="{Binding HasFlag}">
-                          <TextBlock Classes="badge" Text="{Binding FlagText}" />
+                          <TextBlock Text="{Binding FlagText}" />
                         </Border>
-                        <!-- 文件名 -->
-                        <Border VerticalAlignment="Bottom" Background="#A6FFFFFF" Padding="8,4">
+                        <!-- 悬停字幕 -->
+                        <Border Classes="caption">
+                          <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                              <GradientStop Color="#00000000" Offset="0" />
+                              <GradientStop Color="#D2000000" Offset="0.65" />
+                            </LinearGradientBrush>
+                          </Border.Background>
                           <StackPanel Spacing="1">
-                            <TextBlock Text="{Binding Title}" FontSize="11" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Text="{Binding InfoLine}" FontSize="10"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
-                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Title}" FontSize="11.5"
+                                       Foreground="White" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding InfoLine}" FontSize="10.5"
+                                       Foreground="#B3FFFFFF" TextTrimming="CharacterEllipsis" />
                           </StackPanel>
                         </Border>
                       </Panel>
@@ -137,12 +253,23 @@
         </ItemsControl>
       </ScrollViewer>
 
+      <!-- 空态 -->
       <StackPanel IsVisible="{Binding EmptyVisible}" HorizontalAlignment="Center"
-                  VerticalAlignment="Center" Spacing="10">
-        <TextBlock Text="图库还是空的" FontSize="20" FontWeight="SemiBold"
+                  VerticalAlignment="Center" Spacing="14">
+        <Panel Width="76" Height="56" HorizontalAlignment="Center" Opacity="0.55">
+          <Border BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="2"
+                  CornerRadius="9" />
+          <Border Width="18" Height="9" CornerRadius="2" VerticalAlignment="Top"
+                  HorizontalAlignment="Center" Margin="0,-3,0,0"
+                  BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="2" />
+          <Ellipse Width="26" Height="26" Stroke="{StaticResource TextTertiaryBrush}"
+                   StrokeThickness="2" />
+          <Ellipse Width="12" Height="12" Fill="{StaticResource AccentBrush}" Opacity="0.9" />
+        </Panel>
+        <TextBlock Text="图库还是空的" FontSize="19" FontWeight="SemiBold"
                    HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
         <TextBlock Text="点上方「导入文件夹…」选择照片目录。原片只读，不会被移动或修改。"
-                   FontSize="13" HorizontalAlignment="Center"
+                   FontSize="12.5" HorizontalAlignment="Center"
                    Foreground="{StaticResource TextTertiaryBrush}" />
       </StackPanel>
     </Panel>
@@ -150,14 +277,14 @@
     <!-- 底部计数条 -->
     <Border Grid.Row="2" Background="{StaticResource ChromeBrush}"
             BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0">
-      <StackPanel Orientation="Horizontal" Spacing="18" Margin="16,6">
+      <StackPanel Orientation="Horizontal" Spacing="18" Margin="16,5">
         <TextBlock FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}">
           <Run Text="共 " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" 张" />
         </TextBlock>
-        <TextBlock FontSize="11.5" Foreground="#0A84FF">
+        <TextBlock FontSize="11.5" Foreground="#7FAAFF">
           <Run Text="入选 " /><Run Text="{Binding PickCount, Mode=OneWay}" />
         </TextBlock>
-        <TextBlock FontSize="11.5" Foreground="#C93B3B">
+        <TextBlock FontSize="11.5" Foreground="#F0768A">
           <Run Text="排除 " /><Run Text="{Binding RejectCount, Mode=OneWay}" />
         </TextBlock>
       </StackPanel>

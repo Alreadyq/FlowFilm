@@ -57,6 +57,9 @@ public sealed class PhotoTile : INotifyPropertyChanged
 
     public bool HasFlag => Photo.Flag != PhotoFlag.None;
 
+    /// <summary>旗标角标配色：入选蓝、排除红。</summary>
+    public bool IsReject => Photo.Flag == PhotoFlag.Reject;
+
     /// <summary>瓦片边长（正方形格子），由视图模型在重建行时设置。</summary>
     public int PixelSize
     {
@@ -117,6 +120,7 @@ public sealed class PhotoTile : INotifyPropertyChanged
         };
         OnPropertyChanged(nameof(FlagText));
         OnPropertyChanged(nameof(HasFlag));
+        OnPropertyChanged(nameof(IsReject));
         _onFlagChanged(this);
     }
 
@@ -224,10 +228,31 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             new FilterItem(LibraryFilter.Rejects, "排除 X"),
             new FilterItem(LibraryFilter.Unflagged, "未标记"),
         ];
+        Filters[0].IsSelected = true;
         LoadFromDb();
     }
 
-    public sealed record FilterItem(LibraryFilter Value, string Label);
+    public sealed class FilterItem : INotifyPropertyChanged
+    {
+        private bool _isSelected;
+
+        public FilterItem(LibraryFilter value, string label)
+        {
+            Value = value;
+            Label = label;
+        }
+
+        public LibraryFilter Value { get; }
+        public string Label { get; }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set { _isSelected = value; PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected))); }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
 
     public IReadOnlyList<FilterItem> Filters { get; }
 
@@ -264,6 +289,11 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
             _filter = value;
             OnPropertyChanged();
+            foreach (var f in Filters)
+            {
+                f.IsSelected = f.Value == value;
+            }
+
             RebuildRows();
         }
     }

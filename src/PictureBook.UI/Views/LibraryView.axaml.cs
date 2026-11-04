@@ -78,11 +78,12 @@ public partial class LibraryView : UserControl
         await vm.ImportAsync(folders[0].Path.LocalPath);
     }
 
-    private void OnFilterChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnFilterChecked(object? sender, RoutedEventArgs e)
     {
-        if (Vm is not null && sender is ComboBox { SelectedItem: LibraryViewModel.FilterItem item })
+        if (Vm is not null && sender is RadioButton { DataContext: LibraryViewModel.FilterItem item } &&
+            item.Value != Vm.Filter)
         {
-            Vm.Filter = item.Value;
+            Vm.Filter = item.Value; // VM 会回写所有 IsSelected，RadioButton 随之联动
         }
     }
 

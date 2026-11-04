@@ -3,7 +3,7 @@
         xmlns:views="using:PictureBook.UI.Views"
         x:Class="PictureBook.UI.Views.MainWindow"
         Title="PictureBook"
-        Width="1180" Height="760" MinWidth="940" MinHeight="620"
+        Width="1280" Height="800" MinWidth="940" MinHeight="620"
         Background="{StaticResource CanvasBrush}">
 
   <Grid RowDefinitions="*,30">
@@ -61,7 +61,7 @@
           <StackPanel Spacing="14">
             <StackPanel Orientation="Horizontal" Spacing="10">
               <TextBlock Text="{Binding SelectedTitle}" FontSize="26" FontWeight="SemiBold" />
-              <Border Background="#1F0A84FF" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
+              <Border Background="#3D4C8DFF" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
                 <TextBlock Text="{Binding SelectedStatus}" FontSize="11.5"
                            Foreground="{StaticResource AccentBrush}" />
               </Border>
@@ -106,7 +106,7 @@
         <TextBlock Text="{Binding SelectedTitle}" FontSize="11"
                    Foreground="{StaticResource TextSecondaryBrush}"
                    HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <TextBlock Text="PictureBook 0.1.0-skeleton · Avalonia / .NET 9 · 跨平台" FontSize="11"
+        <TextBlock Text="PictureBook 0.2.0 · Avalonia / .NET 9 · 跨平台" FontSize="11"
                    Foreground="{StaticResource TextTertiaryBrush}"
                    HorizontalAlignment="Right" VerticalAlignment="Center" />
       </Grid>
