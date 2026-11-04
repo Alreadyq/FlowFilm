@@ -92,8 +92,7 @@ public sealed class CatalogDatabase
     }
 
     public long AddSourceIfMissing(string path)
-    {
-        using var conn = Open();
+    {        using var conn = Open();
         using (var check = conn.CreateCommand())
         {
             check.CommandText = "SELECT id FROM sources WHERE path = $p";
@@ -110,6 +109,22 @@ public sealed class CatalogDatabase
         insert.Parameters.AddWithValue("$p", path);
         insert.Parameters.AddWithValue("$t", DateTime.UtcNow.ToString("o"));
         return (long)insert.ExecuteScalar()!;
+    }
+
+    /// <summary>已导入的来源文件夹（侧栏「来源」用）。</summary>
+    public List<(long Id, string Path)> LoadSources()
+    {
+        var list = new List<(long, string)>();
+        using var conn = Open();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT id, path FROM sources ORDER BY added_at";
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
+        {
+            list.Add((reader.GetInt64(0), reader.GetString(1)));
+        }
+
+        return list;
     }
 
     public Dictionary<string, (long ModifiedTicks, long Bytes)> LoadPhotoStamps()

@@ -3,113 +3,76 @@
         xmlns:views="using:PictureBook.UI.Views"
         x:Class="PictureBook.UI.Views.MainWindow"
         Title="PictureBook"
-        Width="1280" Height="800" MinWidth="940" MinHeight="620"
+        Width="1280" Height="800" MinWidth="1040" MinHeight="640"
         Background="{StaticResource CanvasBrush}">
 
-  <Grid RowDefinitions="*,30">
+  <Window.Resources>
+    <ControlTheme x:Key="TabTheme" TargetType="RadioButton">
+      <Setter Property="Padding" Value="14,5" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <ContentPresenter x:Name="PART_ContentPresenter"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}"
+                            Content="{TemplateBinding Content}"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center" />
+        </ControlTemplate>
+      </Setter>
+      <Style Selector="^:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#1FFFFFFF" />
+      </Style>
+      <Style Selector="^:checked">
+        <Setter Property="Background" Value="#3D4C8DFF" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+      </Style>
+    </ControlTheme>
+  </Window.Resources>
 
-    <Grid ColumnDefinitions="224,*">
+  <Grid RowDefinitions="Auto,*">
 
-      <!-- 侧栏 -->
-      <Border Background="{StaticResource SidebarBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,1,0">
-        <ScrollViewer>
-          <StackPanel Margin="0,10,0,10">
-            <TextBlock Text="PictureBook" Margin="14,4,0,2" FontSize="17" FontWeight="SemiBold" />
-            <TextBlock Text="本地照片工作台" Margin="14,0,0,4" FontSize="11"
-                       Foreground="{StaticResource TextTertiaryBrush}" />
-
-            <TextBlock Classes="section" Text="功能" />
-            <ListBox x:Name="NavList"
-                     ItemsSource="{Binding Features}"
-                     SelectedItem="{Binding Selected}"
-                     Background="Transparent" BorderThickness="0" Padding="0">
-              <ListBox.ItemContainerTheme>
-                <ControlTheme TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
-                  <Setter Property="Padding" Value="0" />
-                  <Setter Property="MinHeight" Value="0" />
-                  <Setter Property="Background" Value="Transparent" />
-                  <Setter Property="Template">
-                    <ControlTemplate>
-                      <Button Classes="nav"
-                              Classes.active="{Binding IsActive}"
-                              Content="{Binding}" IsHitTestVisible="False" />
-                    </ControlTemplate>
-                  </Setter>
-                </ControlTheme>
-              </ListBox.ItemContainerTheme>
-              <ListBox.ItemTemplate>
-                <DataTemplate>
-                  <StackPanel Margin="6,2">
-                    <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="Medium" />
-                    <TextBlock Classes="sub" Text="{Binding Subtitle}" FontSize="11"
-                               Foreground="{StaticResource TextSecondaryBrush}" TextWrapping="Wrap" />
-                  </StackPanel>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
-          </StackPanel>
-        </ScrollViewer>
-      </Border>
-
-      <!-- 主内容：图库网格 / 功能说明 -->
-      <Panel>
-        <views:LibraryView IsVisible="{Binding IsLibrary}"
-                           DataContext="{Binding Library}" />
-
-        <ScrollViewer IsVisible="{Binding !IsLibrary}">
-          <Panel Margin="36,30,36,30" MaxWidth="760" HorizontalAlignment="Left">
-          <StackPanel Spacing="14">
-            <StackPanel Orientation="Horizontal" Spacing="10">
-              <TextBlock Text="{Binding SelectedTitle}" FontSize="26" FontWeight="SemiBold" />
-              <Border Background="#3D4C8DFF" CornerRadius="6" Padding="8,3" VerticalAlignment="Center">
-                <TextBlock Text="{Binding SelectedStatus}" FontSize="11.5"
-                           Foreground="{StaticResource AccentBrush}" />
-              </Border>
-            </StackPanel>
-
-            <TextBlock Text="{Binding SelectedSubtitle}" FontSize="14"
-                       Foreground="{StaticResource TextSecondaryBrush}" />
-
-            <Border Background="{StaticResource SurfaceBrush}"
-                    BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1"
-                    CornerRadius="10" Padding="20,14" Margin="0,8,0,0">
-              <StackPanel Spacing="10">
-                <TextBlock Text="规划能力" FontSize="12" FontWeight="SemiBold"
-                           Foreground="{StaticResource TextTertiaryBrush}" />
-                <ItemsControl ItemsSource="{Binding SelectedCapabilities}">
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                      <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
-                        <Ellipse Width="5" Height="5" Fill="{StaticResource AccentBrush}"
-                                 VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding}" FontSize="13" TextWrapping="Wrap" />
-                      </StackPanel>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
-              </StackPanel>
-            </Border>
-
-            <TextBlock Text="该功能按规划逐步填充，图库已可用：导入 → 网格浏览 → 旗标筛选。"
-                       FontSize="12.5" Foreground="{StaticResource TextTertiaryBrush}"
-                       TextWrapping="Wrap" Margin="0,6,0,0" />
-          </StackPanel>
-        </Panel>
-        </ScrollViewer>
-      </Panel>
-    </Grid>
-
-    <!-- 状态栏 -->
-    <Border Grid.Row="1" Background="{StaticResource ChromeBrush}"
-            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0">
-      <Grid Margin="12,0">
-        <TextBlock Text="{Binding SelectedTitle}" FontSize="11"
-                   Foreground="{StaticResource TextSecondaryBrush}"
-                   HorizontalAlignment="Left" VerticalAlignment="Center" />
-        <TextBlock Text="PictureBook 0.2.0 · Avalonia / .NET 9 · 跨平台" FontSize="11"
-                   Foreground="{StaticResource TextTertiaryBrush}"
-                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+    <!-- 顶栏：品牌 + 模块切换 -->
+    <Border Background="{StaticResource ChromeBrush}"
+            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="16,9">
+        <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center" Margin="0,0,20,0">
+          <Ellipse Width="9" Height="9" Fill="{StaticResource AccentBrush}"
+                   VerticalAlignment="Center" />
+          <TextBlock Text="PictureBook" FontSize="14.5" FontWeight="Bold" />
+        </StackPanel>
+        <ItemsControl Grid.Column="1" ItemsSource="{Binding Tabs}" VerticalAlignment="Center">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="4" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <RadioButton Theme="{StaticResource TabTheme}" GroupName="module"
+                           Content="{Binding Title}"
+                           IsChecked="{Binding IsActive, Mode=TwoWay}"
+                           Checked="OnTabChecked" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Grid.Column="3" Text="0.2.0 · 本地照片工作台" FontSize="11"
+                   Foreground="{StaticResource TextTertiaryBrush}" VerticalAlignment="Center" />
       </Grid>
     </Border>
+
+    <!-- 模块内容 -->
+    <Panel Grid.Row="1">
+      <views:LibraryView IsVisible="{Binding IsLibrary}" DataContext="{Binding Library}" />
+      <views:FilmView IsVisible="{Binding IsFilm}" DataContext="{Binding Film}" />
+      <views:SheetView IsVisible="{Binding IsSheet}" DataContext="{Binding Sheet}" />
+    </Panel>
   </Grid>
 </Window>

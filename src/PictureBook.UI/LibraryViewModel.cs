@@ -26,11 +26,13 @@ public sealed class PhotoTile : INotifyPropertyChanged
     private IImage? _thumb;
     private bool _isLoading;
     private bool _isFailed;
+    private bool _isSelected;
     private int _loadedSize;
     private int _pixelSize = 176;
     private ThumbnailCache? _cache;
     private int _requestedSize;
     private CancellationTokenSource? _cts;
+    private List<KeyValuePair<string, string>>? _details;
 
     public PhotoTile(Photo photo, Action<PhotoTile> onFlagChanged)
     {
@@ -60,6 +62,13 @@ public sealed class PhotoTile : INotifyPropertyChanged
     /// <summary>旗标角标配色：入选蓝、排除红。</summary>
     public bool IsReject => Photo.Flag == PhotoFlag.Reject;
 
+    /// <summary>当前是否被选中（图库网格与胶片条共用全局选中态）。</summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set { _isSelected = value; OnPropertyChanged(); }
+    }
+
     /// <summary>瓦片边长（正方形格子），由视图模型在重建行时设置。</summary>
     public int PixelSize
     {
@@ -87,6 +96,32 @@ public sealed class PhotoTile : INotifyPropertyChanged
         private set { _isFailed = value; OnPropertyChanged(); }
     }
 
+    /// <summary>右栏信息面板的键值行（惰性构建）。</summary>
+    public IReadOnlyList<KeyValuePair<string, string>> Details => _details ??= BuildDetails();
+
+    private List<KeyValuePair<string, string>> BuildDetails()
+    {
+        var rows = new List<KeyValuePair<string, string>>();
+        void Add(string key, string? value)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                rows.Add(new(key, value));
+            }
+        }
+
+        Add("拍摄时间", Photo.TakenAt?.ToString("yyyy-MM-dd HH:mm"));
+        Add("机身", Photo.CameraDisplay);
+        Add("镜头", Photo.LensModel);
+        Add("曝光", Photo.ExposureDisplay);
+        Add("格式", Photo.IsRaw ? $"RAW ({Photo.Extension.TrimStart('.').ToUpperInvariant()})"
+            : Photo.Extension.TrimStart('.').ToUpperInvariant());
+        Add("大小", $"{Photo.FileBytes / 1024d / 1024d:F1} MB");
+        Add("像素", Photo.PixelWidth > 0 ? $"{Photo.PixelWidth} × {Photo.PixelHeight}" : null);
+        Add("路径", Photo.FilePath);
+        return rows;
+    }
+
     /// <summary>请求加载缩略图。重复调用且尺寸未变时是幂等的。</summary>
     public void BeginLoad(ThumbnailCache cache, int size)
     {
@@ -109,20 +144,25 @@ public sealed class PhotoTile : INotifyPropertyChanged
         IsLoading = false;
     }
 
-    /// <summary>点击循环切换旗标：无 → P（入选）→ X（排除）→ 无。</summary>
-    public void CycleFlag()
+    /// <summary>设置旗标并写库。</summary>
+    public void SetFlag(PhotoFlag flag)
     {
-        Photo.Flag = Photo.Flag switch
+        if (Photo.Flag == flag)
         {
-            PhotoFlag.None => PhotoFlag.Pick,
-            PhotoFlag.Pick => PhotoFlag.Reject,
-            _ => PhotoFlag.None,
-        };
+            return;
+        }
+
+        Photo.Flag = flag;
         OnPropertyChanged(nameof(FlagText));
         OnPropertyChanged(nameof(HasFlag));
         OnPropertyChanged(nameof(IsReject));
         _onFlagChanged(this);
     }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
     private async void RestartLoad()
     {
@@ -185,11 +225,6 @@ public sealed class PhotoTile : INotifyPropertyChanged
             }
         }
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
-
-    private void OnPropertyChanged([CallerMemberName] string? name = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 
 /// <summary>一行瓦片。行是虚拟化单元：滚出视口的整行都会被释放。</summary>
@@ -213,6 +248,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
     private int _tileSize = 176;
     private int _pendingTileSize;
     private double _viewportWidth;
+    private PhotoTile? _selectedTile;
     private string _statusText = string.Empty;
     private bool _isBusy;
 
@@ -230,6 +266,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         ];
         Filters[0].IsSelected = true;
         LoadFromDb();
+        ReloadSources();
     }
 
     public sealed class FilterItem : INotifyPropertyChanged
@@ -260,6 +297,23 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
     /// <summary>按行分块的瓦片集合，供行级虚拟化。</summary>
     public ObservableCollection<TileRow> Rows { get; } = [];
+
+    /// <summary>平铺瓦片（胶片条等模块复用），与 Rows 同步重建。</summary>
+    public IReadOnlyList<PhotoTile> FlatTiles { get; private set; } = [];
+
+    /// <summary>网格重建完成（含导入/筛选/尺寸变化后）。</summary>
+    public event Action? TilesChanged;
+
+    /// <summary>侧栏「来源」文件夹名列表。</summary>
+    public ObservableCollection<string> Sources { get; } = [];
+
+    public PhotoTile? SelectedTile
+    {
+        get => _selectedTile;
+        private set { _selectedTile = value; }
+    }
+
+    public bool HasSelection => SelectedTile is not null;
 
     public int TotalCount => _all.Count;
 
@@ -344,6 +398,38 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         RebuildRows(); // 尺寸变了缓存键就变，可见瓦片按新尺寸重新加载
     }
 
+    /// <summary>全局选中一张照片（图库网格、胶片条共用）。</summary>
+    public void Select(PhotoTile? tile)
+    {
+        if (ReferenceEquals(SelectedTile, tile))
+        {
+            return;
+        }
+
+        if (SelectedTile is not null)
+        {
+            SelectedTile.IsSelected = false;
+        }
+
+        _selectedTile = tile;
+        if (tile is not null)
+        {
+            tile.IsSelected = true;
+            // 信息面板的预览图至少 256px，独立于网格瓦片尺寸
+            tile.BeginLoad(_cache, Math.Max(_tileSize, 256));
+        }
+
+        OnPropertyChanged(nameof(SelectedTile));
+        OnPropertyChanged(nameof(HasSelection));
+    }
+
+    /// <summary>对选中照片设置旗标并写库（右栏 P / 无 / X 按钮）。</summary>
+    public void SetSelectedFlag(PhotoFlag flag)
+    {
+        SelectedTile?.SetFlag(flag);
+        RefreshCounts();
+    }
+
     public async Task ImportAsync(string folder)
     {
         if (IsBusy)
@@ -370,6 +456,7 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             var report = await _importer.ImportFolderAsync(folder, progress).ConfigureAwait(true);
             LoadFromDb();
+            ReloadSources();
             StatusText =
                 $"导入完成：新增 {report.Added} · 跳过 {report.Skipped} · 失败 {report.Failed} · {report.Duration.TotalSeconds:F1}s";
         }
@@ -381,6 +468,16 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             IsBusy = false;
             RefreshCounts();
+        }
+    }
+
+    private void ReloadSources()
+    {
+        Sources.Clear();
+        foreach (var (_, path) in _db.LoadSources())
+        {
+            var name = Path.GetFileName(path.TrimEnd(Path.DirectorySeparatorChar));
+            Sources.Add(string.IsNullOrEmpty(name) ? path : name);
         }
     }
 
@@ -414,9 +511,18 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
 
         var cols = Columns;
         var buffer = new List<PhotoTile>(cols);
+        var flat = new List<PhotoTile>();
         foreach (var photo in source)
         {
-            buffer.Add(new PhotoTile(photo, flagWrite) { PixelSize = _tileSize });
+            var tile = new PhotoTile(photo, flagWrite) { PixelSize = _tileSize };
+            if (photo.Id == SelectedTile?.Photo.Id)
+            {
+                tile.IsSelected = true;
+                _selectedTile = tile; // 重建后选中态迁移到新瓦片实例
+            }
+
+            flat.Add(tile);
+            buffer.Add(tile);
             if (buffer.Count == cols)
             {
                 Rows.Add(new TileRow(buffer.ToArray()));
@@ -429,6 +535,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             Rows.Add(new TileRow(buffer.ToArray()));
         }
 
+        FlatTiles = flat;
+        TilesChanged?.Invoke();
         OnPropertyChanged(nameof(EmptyVisible));
     }
 

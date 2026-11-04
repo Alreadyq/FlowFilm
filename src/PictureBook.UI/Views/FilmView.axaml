@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PictureBook.UI.Views.FilmView">
+
+  <UserControl.Styles>
+
+    <Style Selector="Border.striptile">
+      <Setter Property="Width" Value="64" />
+      <Setter Property="Height" Value="64" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="ClipToBounds" Value="True" />
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.1" />
+        </Transitions>
+      </Setter>
+    </Style>
+    <Style Selector="Border.striptile:pointerover">
+      <Setter Property="BorderBrush" Value="#664C8DFF" />
+    </Style>
+    <Style Selector="Border.striptile.sel">
+      <Setter Property="BorderBrush" Value="#FF4C8DFF" />
+    </Style>
+
+    <Style Selector="TextBlock.panelhead">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource TextTertiaryBrush}" />
+      <Setter Property="Margin" Value="0,4,0,2" />
+    </Style>
+    <Style Selector="TextBlock.pending">
+      <Setter Property="FontSize" Value="10.5" />
+      <Setter Property="Foreground" Value="{StaticResource TextTertiaryBrush}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Opacity" Value="0.8" />
+    </Style>
+    <Style Selector="Border.pendingtag">
+      <Setter Property="Background" Value="#26FFFFFF" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="5,1" />
+    </Style>
+
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*,88">
+
+    <Grid ColumnDefinitions="*,290">
+      <!-- 中央预览区 -->
+      <Panel>
+        <Panel IsVisible="{Binding HasSelection}" Background="{StaticResource CanvasBrush}">
+          <Image Source="{Binding Selected.Thumb}" Stretch="Uniform" Margin="24" />
+          <Border VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,12,0,0"
+                  Background="#B3000000" CornerRadius="5" Padding="9,3">
+            <TextBlock Text="{Binding SelectedTitle}" FontSize="11.5" Foreground="#E6FFFFFF"
+                       TextTrimming="CharacterEllipsis" MaxWidth="520" />
+          </Border>
+        </Panel>
+
+        <StackPanel IsVisible="{Binding !HasSelection}" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" Spacing="10">
+          <TextBlock Text="胶片工作台" FontSize="20" FontWeight="SemiBold"
+                     Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+          <TextBlock Text="到「图库」选中一张照片，这里显示胶片模拟预览。" FontSize="12.5"
+                     Foreground="{StaticResource TextTertiaryBrush}" HorizontalAlignment="Center" />
+          <TextBlock Text="预览走离线烘焙的 65³ LUT（四面体插值）；导出时由 Python 物理仿真引擎出 16-bit 母版。"
+                     FontSize="11.5" Foreground="{StaticResource TextTertiaryBrush}"
+                     HorizontalAlignment="Center" Opacity="0.85" />
+        </StackPanel>
+      </Panel>
+
+      <!-- 右栏：胶片控制 -->
+      <Border Background="{StaticResource ChromeBrush}"
+              BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1,0,0,0">
+        <ScrollViewer>
+          <StackPanel Margin="14,14,14,14" Spacing="12">
+            <TextBlock Classes="panelhead" Text="胶片型号" />
+            <ItemsControl ItemsSource="{Binding Stocks}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                    <TextBlock Text="{Binding}" FontSize="12.5"
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextTrimming="CharacterEllipsis" />
+                    <Border Grid.Column="1" Classes="pendingtag">
+                      <TextBlock Classes="pending" Text="待烘焙" />
+                    </Border>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Classes="panelhead" Text="参数" Margin="0,10,0,0" />
+            <StackPanel Spacing="4" IsEnabled="False" Opacity="0.55">
+              <TextBlock Text="胶片强度" FontSize="11.5"
+                         Foreground="{StaticResource TextSecondaryBrush}" />
+              <Slider Minimum="0" Maximum="100" Value="100" />
+              <TextBlock Text="曝光补偿 (EV)" FontSize="11.5" Margin="0,6,0,0"
+                         Foreground="{StaticResource TextSecondaryBrush}" />
+              <Slider Minimum="-3" Maximum="3" Value="0" />
+              <TextBlock Text="滤光片偏移 Y / M" FontSize="11.5" Margin="0,6,0,0"
+                         Foreground="{StaticResource TextSecondaryBrush}" />
+              <Slider Minimum="-50" Maximum="50" Value="0" />
+            </StackPanel>
+
+            <TextBlock Classes="panelhead" Text="导出专属" Margin="0,10,0,0" />
+            <StackPanel Spacing="4" IsEnabled="False" Opacity="0.55">
+              <CheckBox Content="颗粒（ISO 相关）" FontSize="12" />
+              <CheckBox Content="光晕（Halation）" FontSize="12" />
+            </StackPanel>
+
+            <TextBlock Text="强度与曝光在 LUT 之前的线性域做数学，预览与导出严格一致；颗粒与光晕是空间效果，仅导出生效。"
+                       FontSize="11" Foreground="{StaticResource TextTertiaryBrush}"
+                       TextWrapping="Wrap" Margin="0,4,0,0" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <!-- 底部胶片条 -->
+    <Border Grid.Row="1" Background="{StaticResource ChromeBrush}"
+            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                    Padding="14,12">
+        <ItemsControl ItemsSource="{Binding Strip}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="striptile" Classes.sel="{Binding IsSelected}"
+                      AttachedToVisualTree="OnStripAttached"
+                      DetachedFromVisualTree="OnStripDetached"
+                      Tapped="OnStripTapped">
+                <Image Source="{Binding Thumb}" Stretch="UniformToFill" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </Border>
+  </Grid>
+</UserControl>

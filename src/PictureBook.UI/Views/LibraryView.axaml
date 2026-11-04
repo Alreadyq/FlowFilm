@@ -33,11 +33,13 @@
       </Style>
     </ControlTheme>
 
+    <!-- 旗标按钮（沿用分段外观） -->
+    <ControlTheme x:Key="FlagTheme" TargetType="RadioButton" BasedOn="{StaticResource SegTheme}" />
+
   </UserControl.Resources>
 
   <UserControl.Styles>
 
-    <!-- 工具栏按钮 -->
     <Style Selector="Button.tool">
       <Setter Property="Padding" Value="13,6" />
       <Setter Property="CornerRadius" Value="7" />
@@ -67,7 +69,11 @@
       </Setter>
     </Style>
     <Style Selector="Border.tile:pointerover">
-      <Setter Property="BorderBrush" Value="#AA4C8DFF" />
+      <Setter Property="BorderBrush" Value="#884C8DFF" />
+    </Style>
+    <Style Selector="Border.tile.sel">
+      <Setter Property="BorderBrush" Value="#FF4C8DFF" />
+      <Setter Property="BorderThickness" Value="2" />
     </Style>
 
     <!-- 旗标角标：入选蓝 / 排除红 -->
@@ -107,7 +113,7 @@
       <Setter Property="Foreground" Value="#E6FFFFFF" />
     </Style>
 
-    <!-- 加载指示：旋转虚线圆环（Avalonia 11 无内置 spinner） -->
+    <!-- 加载指示：旋转虚线圆环 -->
     <Style Selector="Ellipse.spinner">
       <Setter Property="Stroke" Value="#8CFFFFFF" />
       <Setter Property="StrokeThickness" Value="2" />
@@ -130,7 +136,7 @@
       </Style.Animations>
     </Style>
 
-    <!-- 悬停字幕：默认隐藏，卡片悬停时淡入 -->
+    <!-- 悬停字幕 -->
     <Style Selector="Border.caption">
       <Setter Property="Opacity" Value="0" />
       <Setter Property="VerticalAlignment" Value="Bottom" />
@@ -145,149 +151,214 @@
       <Setter Property="Opacity" Value="1" />
     </Style>
 
+    <!-- 信息面板 -->
+    <Style Selector="TextBlock.infokey">
+      <Setter Property="FontSize" Value="11.5" />
+      <Setter Property="Foreground" Value="{StaticResource TextTertiaryBrush}" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+    </Style>
+    <Style Selector="TextBlock.infovalue">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
   </UserControl.Styles>
 
-  <Grid RowDefinitions="Auto,*,Auto">
+  <Grid ColumnDefinitions="212,*,300">
 
-    <!-- 工具栏 -->
-    <Border Grid.Row="0" Background="{StaticResource ChromeBrush}"
-            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="16,9">
-        <Button x:Name="ImportButton" Classes="tool primary" Content="导入文件夹…"
-                IsEnabled="{Binding !IsBusy}" Click="OnImportClick" />
-        <ItemsControl Grid.Column="1" ItemsSource="{Binding Filters}" Margin="14,0,0,0"
-                      VerticalAlignment="Center">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="4" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <RadioButton Classes="seg" Theme="{StaticResource SegTheme}"
-                           GroupName="libfilter"
-                           Content="{Binding Label}"
-                           IsChecked="{Binding IsSelected, Mode=TwoWay}"
-                           Checked="OnFilterChecked"
-                           IsEnabled="{Binding !IsBusy}" />
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="9"
-                    VerticalAlignment="Center" IsEnabled="{Binding !IsBusy}">
-          <TextBlock Text="缩略图" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
-          <Slider x:Name="SizeSlider" Minimum="120" Maximum="320" Width="130"
-                  Value="{Binding TileSize}" ValueChanged="OnSizeValueChanged" />
+    <!-- 左栏：来源 / 图集 -->
+    <Border Background="{StaticResource SidebarBrush}"
+            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,1,0">
+      <ScrollViewer>
+        <StackPanel Margin="0,12,0,12">
+          <TextBlock Classes="section" Text="来源" Margin="14,0,0,4" />
+          <ItemsControl ItemsSource="{Binding Sources}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="14,4,8,4">
+                  <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}"
+                           VerticalAlignment="Center" Opacity="0.8" />
+                  <TextBlock Text="{Binding}" FontSize="12.5" TextTrimming="CharacterEllipsis"
+                             Foreground="{StaticResource TextSecondaryBrush}"
+                             ToolTip.Tip="{Binding}" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <TextBlock Classes="section" Text="图集" Margin="14,18,0,4" />
+          <TextBlock Text="图集功能将在下一阶段开放：把照片收纳成主题合集。"
+                     FontSize="11.5" Foreground="{StaticResource TextTertiaryBrush}"
+                     TextWrapping="Wrap" Margin="14,0,14,0" />
         </StackPanel>
-        <TextBlock Grid.Column="4" Text="{Binding StatusText}" FontSize="12"
-                   Foreground="{StaticResource TextSecondaryBrush}"
-                   VerticalAlignment="Center" Margin="14,0,0,0" MaxWidth="420"
-                   TextTrimming="CharacterEllipsis" />
-      </Grid>
+      </ScrollViewer>
     </Border>
 
-    <!-- 网格：行级虚拟化 -->
-    <Panel Grid.Row="1">
-      <ScrollViewer x:Name="GridScroller" Padding="16,14">
-        <ItemsControl x:Name="Grid" ItemsSource="{Binding Rows}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <VirtualizingStackPanel />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <ItemsControl ItemsSource="{Binding Tiles}">
-                <ItemsControl.ItemsPanel>
-                  <ItemsPanelTemplate>
-                    <StackPanel Orientation="Horizontal" />
-                  </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <Border Classes="tile"
-                            Width="{Binding PixelSize}" Height="{Binding PixelSize}"
-                            AttachedToVisualTree="OnTileAttached"
-                            DetachedFromVisualTree="OnTileDetached"
-                            Tapped="OnTileTapped">
-                      <Panel>
-                        <!-- 缩略图：铺满裁切 -->
-                        <Image Source="{Binding Thumb}" Stretch="UniformToFill" />
-                        <!-- 占位：载入中 -->
-                        <Panel IsVisible="{Binding ShowPlaceholder}"
-                               Background="{StaticResource SurfaceBrush}">
-                          <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Ellipse Classes="spinner" Width="18" Height="18" />
+    <!-- 中栏：工具栏 + 网格 -->
+    <Grid Grid.Column="1" RowDefinitions="Auto,*">
+      <Border Grid.Row="0" Background="{StaticResource ChromeBrush}"
+              BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="14,9">
+          <Button x:Name="ImportButton" Classes="tool primary" Content="导入文件夹…"
+                  IsEnabled="{Binding !IsBusy}" Click="OnImportClick" />
+          <ItemsControl Grid.Column="1" ItemsSource="{Binding Filters}" Margin="14,0,0,0"
+                        VerticalAlignment="Center">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="4" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <RadioButton Classes="seg" Theme="{StaticResource SegTheme}"
+                             GroupName="libfilter"
+                             Content="{Binding Label}"
+                             IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                             Checked="OnFilterChecked"
+                             IsEnabled="{Binding !IsBusy}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="9"
+                      VerticalAlignment="Center" IsEnabled="{Binding !IsBusy}">
+            <TextBlock Text="缩略图" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+            <Slider x:Name="SizeSlider" Minimum="120" Maximum="320" Width="120"
+                    Value="{Binding TileSize}" ValueChanged="OnSizeValueChanged" />
+          </StackPanel>
+          <TextBlock Grid.Column="4" Text="{Binding StatusText}" FontSize="12"
+                     Foreground="{StaticResource TextSecondaryBrush}"
+                     VerticalAlignment="Center" Margin="14,0,0,0" MaxWidth="340"
+                     TextTrimming="CharacterEllipsis" />
+        </Grid>
+      </Border>
+
+      <Panel Grid.Row="1">
+        <ScrollViewer x:Name="GridScroller" Padding="16,14">
+          <ItemsControl x:Name="Grid" ItemsSource="{Binding Rows}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <VirtualizingStackPanel />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <ItemsControl ItemsSource="{Binding Tiles}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Classes="tile" Classes.sel="{Binding IsSelected}"
+                              Width="{Binding PixelSize}" Height="{Binding PixelSize}"
+                              AttachedToVisualTree="OnTileAttached"
+                              DetachedFromVisualTree="OnTileDetached"
+                              Tapped="OnTileTapped">
+                        <Panel>
+                          <Image Source="{Binding Thumb}" Stretch="UniformToFill" />
+                          <Panel IsVisible="{Binding ShowPlaceholder}"
+                                 Background="{StaticResource SurfaceBrush}">
+                            <Panel HorizontalAlignment="Center" VerticalAlignment="Center">
+                              <Ellipse Classes="spinner" Width="18" Height="18" />
+                            </Panel>
+                            <Border Classes="extbadge" IsVisible="{Binding ShowPlaceholder}">
+                              <TextBlock Text="{Binding ExtBadge}" />
+                            </Border>
                           </Panel>
-                          <Border Classes="extbadge" IsVisible="{Binding ShowPlaceholder}">
-                            <TextBlock Text="{Binding ExtBadge}" />
+                          <Border Classes="flagbadge" Classes.reject="{Binding IsReject}"
+                                  IsVisible="{Binding HasFlag}">
+                            <TextBlock Text="{Binding FlagText}" />
+                          </Border>
+                          <Border Classes="caption">
+                            <Border.Background>
+                              <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
+                                <GradientStop Color="#00000000" Offset="0" />
+                                <GradientStop Color="#D2000000" Offset="0.65" />
+                              </LinearGradientBrush>
+                            </Border.Background>
+                            <StackPanel Spacing="1">
+                              <TextBlock Text="{Binding Title}" FontSize="11.5"
+                                         Foreground="White" TextTrimming="CharacterEllipsis" />
+                              <TextBlock Text="{Binding InfoLine}" FontSize="10.5"
+                                         Foreground="#B3FFFFFF" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
                           </Border>
                         </Panel>
-                        <!-- 旗标角标 -->
-                        <Border Classes="flagbadge" Classes.reject="{Binding IsReject}"
-                                IsVisible="{Binding HasFlag}">
-                          <TextBlock Text="{Binding FlagText}" />
-                        </Border>
-                        <!-- 悬停字幕 -->
-                        <Border Classes="caption">
-                          <Border.Background>
-                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">
-                              <GradientStop Color="#00000000" Offset="0" />
-                              <GradientStop Color="#D2000000" Offset="0.65" />
-                            </LinearGradientBrush>
-                          </Border.Background>
-                          <StackPanel Spacing="1">
-                            <TextBlock Text="{Binding Title}" FontSize="11.5"
-                                       Foreground="White" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Text="{Binding InfoLine}" FontSize="10.5"
-                                       Foreground="#B3FFFFFF" TextTrimming="CharacterEllipsis" />
-                          </StackPanel>
-                        </Border>
-                      </Panel>
-                    </Border>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
 
-      <!-- 空态 -->
-      <StackPanel IsVisible="{Binding EmptyVisible}" HorizontalAlignment="Center"
-                  VerticalAlignment="Center" Spacing="14">
-        <Panel Width="76" Height="56" HorizontalAlignment="Center" Opacity="0.55">
-          <Border BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="2"
-                  CornerRadius="9" />
-          <Border Width="18" Height="9" CornerRadius="2" VerticalAlignment="Top"
-                  HorizontalAlignment="Center" Margin="0,-3,0,0"
-                  BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="2" />
-          <Ellipse Width="26" Height="26" Stroke="{StaticResource TextTertiaryBrush}"
-                   StrokeThickness="2" />
-          <Ellipse Width="12" Height="12" Fill="{StaticResource AccentBrush}" Opacity="0.9" />
-        </Panel>
-        <TextBlock Text="图库还是空的" FontSize="19" FontWeight="SemiBold"
-                   HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
-        <TextBlock Text="点上方「导入文件夹…」选择照片目录。原片只读，不会被移动或修改。"
-                   FontSize="12.5" HorizontalAlignment="Center"
-                   Foreground="{StaticResource TextTertiaryBrush}" />
-      </StackPanel>
-    </Panel>
+        <StackPanel IsVisible="{Binding EmptyVisible}" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" Spacing="14">
+          <Panel Width="76" Height="56" HorizontalAlignment="Center" Opacity="0.55">
+            <Border BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="2"
+                    CornerRadius="9" />
+            <Border Width="18" Height="9" CornerRadius="2" VerticalAlignment="Top"
+                    HorizontalAlignment="Center" Margin="0,-3,0,0"
+                    BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="2" />
+            <Ellipse Width="26" Height="26" Stroke="{StaticResource TextTertiaryBrush}"
+                     StrokeThickness="2" />
+            <Ellipse Width="12" Height="12" Fill="{StaticResource AccentBrush}" Opacity="0.9" />
+          </Panel>
+          <TextBlock Text="图库还是空的" FontSize="19" FontWeight="SemiBold"
+                     HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
+          <TextBlock Text="点上方「导入文件夹…」选择照片目录。原片只读，不会被移动或修改。"
+                     FontSize="12.5" HorizontalAlignment="Center"
+                     Foreground="{StaticResource TextTertiaryBrush}" />
+        </StackPanel>
+      </Panel>
+    </Grid>
 
-    <!-- 底部计数条 -->
-    <Border Grid.Row="2" Background="{StaticResource ChromeBrush}"
-            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0">
-      <StackPanel Orientation="Horizontal" Spacing="18" Margin="16,5">
-        <TextBlock FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}">
-          <Run Text="共 " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" 张" />
-        </TextBlock>
-        <TextBlock FontSize="11.5" Foreground="#7FAAFF">
-          <Run Text="入选 " /><Run Text="{Binding PickCount, Mode=OneWay}" />
-        </TextBlock>
-        <TextBlock FontSize="11.5" Foreground="#F0768A">
-          <Run Text="排除 " /><Run Text="{Binding RejectCount, Mode=OneWay}" />
-        </TextBlock>
-      </StackPanel>
+    <!-- 右栏：信息面板 -->
+    <Border Grid.Column="2" Background="{StaticResource ChromeBrush}"
+            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1,0,0,0">
+      <Panel Margin="14,14,14,14">
+        <StackPanel IsVisible="{Binding HasSelection}" Spacing="10">
+          <Border Height="170" CornerRadius="8" ClipToBounds="True"
+                  Background="{StaticResource SurfaceBrush}">
+            <Image Source="{Binding SelectedTile.Thumb}" Stretch="Uniform" />
+          </Border>
+          <TextBlock Text="{Binding SelectedTile.Title}" FontSize="13.5" FontWeight="SemiBold"
+                     TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding SelectedTile.Title}" />
+
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <RadioButton Theme="{StaticResource FlagTheme}" GroupName="photoflag" Content="P"
+                         Tag="Pick" Checked="OnFlagPickChecked" x:Name="FlagPick" />
+            <RadioButton Theme="{StaticResource FlagTheme}" GroupName="photoflag" Content="无"
+                         Tag="None" Checked="OnFlagNoneChecked" x:Name="FlagNone" />
+            <RadioButton Theme="{StaticResource FlagTheme}" GroupName="photoflag" Content="X"
+                         Tag="Reject" Checked="OnFlagRejectChecked" x:Name="FlagReject" />
+          </StackPanel>
+
+          <ItemsControl ItemsSource="{Binding SelectedTile.Details}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="64,*" Margin="0,3">
+                  <TextBlock Classes="infokey" Text="{Binding Key}" />
+                  <TextBlock Grid.Column="1" Classes="infovalue" Text="{Binding Value}"
+                             Foreground="{StaticResource TextSecondaryBrush}"
+                             ToolTip.Tip="{Binding Value}" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+
+        <StackPanel IsVisible="{Binding !HasSelection}" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" Spacing="8">
+          <TextBlock Text="未选择照片" FontSize="15" FontWeight="SemiBold"
+                     Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
+          <TextBlock Text="点击网格中的照片，在这里查看拍摄信息并打旗标。"
+                     FontSize="12" Foreground="{StaticResource TextTertiaryBrush}"
+                     TextWrapping="Wrap" TextAlignment="Center" />
+        </StackPanel>
+      </Panel>
     </Border>
   </Grid>
 </UserControl>
