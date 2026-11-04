@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:PictureBook.UI.Views"
         x:Class="PictureBook.UI.Views.MainWindow"
         Title="PictureBook"
         Width="1180" Height="760" MinWidth="940" MinHeight="620"
@@ -50,9 +51,13 @@
         </ScrollViewer>
       </Border>
 
-      <!-- 主内容 -->
-      <ScrollViewer>
-        <Panel Margin="36,30,36,30" MaxWidth="760" HorizontalAlignment="Left">
+      <!-- 主内容：图库网格 / 功能说明 -->
+      <Panel>
+        <views:LibraryView IsVisible="{Binding IsLibrary}"
+                           DataContext="{Binding Library}" />
+
+        <ScrollViewer IsVisible="{Binding !IsLibrary}">
+          <Panel Margin="36,30,36,30" MaxWidth="760" HorizontalAlignment="Left">
           <StackPanel Spacing="14">
             <StackPanel Orientation="Horizontal" Spacing="10">
               <TextBlock Text="{Binding SelectedTitle}" FontSize="26" FontWeight="SemiBold" />
@@ -85,12 +90,13 @@
               </StackPanel>
             </Border>
 
-            <TextBlock Text="当前为项目结构骨架：分层（Core / UI / Desktop）、平台解码抽象、SQLite 图库、四面体 LUT 引擎、.pbl 容器与索引图排版模型已落位，界面按功能逐步填充。"
+            <TextBlock Text="该功能按规划逐步填充，图库已可用：导入 → 网格浏览 → 旗标筛选。"
                        FontSize="12.5" Foreground="{StaticResource TextTertiaryBrush}"
                        TextWrapping="Wrap" Margin="0,6,0,0" />
           </StackPanel>
         </Panel>
-      </ScrollViewer>
+        </ScrollViewer>
+      </Panel>
     </Grid>
 
     <!-- 状态栏 -->

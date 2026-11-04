@@ -1,0 +1,166 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PictureBook.UI.Views.LibraryView">
+
+  <UserControl.Styles>
+
+    <Style Selector="Button.tool">
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+    <Style Selector="Button.tool.primary">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.tool:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#33888888" />
+    </Style>
+    <Style Selector="Button.tool.primary:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#E60A84FF" />
+    </Style>
+
+    <Style Selector="Border.tile">
+      <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="ClipToBounds" Value="True" />
+      <Setter Property="Margin" Value="0,0,12,12" />
+    </Style>
+    <Style Selector="Border.tile:pointerover">
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.badge">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto">
+
+    <!-- 工具栏 -->
+    <Border Grid.Row="0" Background="{StaticResource ChromeBrush}"
+            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" Margin="16,10">
+        <Button x:Name="ImportButton" Classes="tool primary" Content="导入文件夹…"
+                IsEnabled="{Binding !IsBusy}" Click="OnImportClick" />
+        <ComboBox Grid.Column="1" Margin="12,0,0,0" MinWidth="110"
+                  ItemsSource="{Binding Filters}"
+                  SelectedIndex="0"
+                  SelectionChanged="OnFilterChanged"
+                  IsEnabled="{Binding !IsBusy}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Label}" FontSize="13" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8"
+                    VerticalAlignment="Center" IsEnabled="{Binding !IsBusy}">
+          <TextBlock Text="缩略图" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+          <Slider x:Name="SizeSlider" Minimum="120" Maximum="320" Width="140"
+                  Value="{Binding TileSize}" ValueChanged="OnSizeValueChanged" />
+        </StackPanel>
+        <TextBlock Grid.Column="4" Text="{Binding StatusText}" FontSize="12"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   VerticalAlignment="Center" Margin="14,0,0,0" />
+      </Grid>
+    </Border>
+
+    <!-- 网格：行级虚拟化（VirtualizingStackPanel 按行实现/回收） -->
+    <Panel Grid.Row="1">
+      <ScrollViewer x:Name="GridScroller" Padding="16,14">
+        <ItemsControl x:Name="Grid" ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <VirtualizingStackPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <ItemsControl ItemsSource="{Binding Tiles}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Classes="tile"
+                            Width="{Binding PixelSize}" Height="{Binding PixelSize}"
+                            AttachedToVisualTree="OnTileAttached"
+                            DetachedFromVisualTree="OnTileDetached"
+                            Tapped="OnTileTapped">
+                      <Panel>
+                        <!-- 占位 -->
+                        <StackPanel IsVisible="{Binding ShowPlaceholder}"
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="6">
+                          <TextBlock Text="载入中…" FontSize="12"
+                                     Foreground="{StaticResource TextTertiaryBrush}"
+                                     HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <!-- 缩略图 -->
+                        <Image Source="{Binding Thumb}" Stretch="Uniform" />
+                        <!-- 扩展名角标 -->
+                        <Border HorizontalAlignment="Left" VerticalAlignment="Top" Margin="6,6,0,0"
+                                Background="#B3000000" CornerRadius="4" Padding="5,1"
+                                IsVisible="{Binding ShowPlaceholder}">
+                          <TextBlock Classes="badge" Text="{Binding ExtBadge}" />
+                        </Border>
+                        <!-- 旗标角标 -->
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,6,0"
+                                CornerRadius="4" Padding="7,1"
+                                Background="#E60A84FF"
+                                IsVisible="{Binding HasFlag}">
+                          <TextBlock Classes="badge" Text="{Binding FlagText}" />
+                        </Border>
+                        <!-- 文件名 -->
+                        <Border VerticalAlignment="Bottom" Background="#A6FFFFFF" Padding="8,4">
+                          <StackPanel Spacing="1">
+                            <TextBlock Text="{Binding Title}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding InfoLine}" FontSize="10"
+                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis" />
+                          </StackPanel>
+                        </Border>
+                      </Panel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <StackPanel IsVisible="{Binding EmptyVisible}" HorizontalAlignment="Center"
+                  VerticalAlignment="Center" Spacing="10">
+        <TextBlock Text="图库还是空的" FontSize="20" FontWeight="SemiBold"
+                   HorizontalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" />
+        <TextBlock Text="点上方「导入文件夹…」选择照片目录。原片只读，不会被移动或修改。"
+                   FontSize="13" HorizontalAlignment="Center"
+                   Foreground="{StaticResource TextTertiaryBrush}" />
+      </StackPanel>
+    </Panel>
+
+    <!-- 底部计数条 -->
+    <Border Grid.Row="2" Background="{StaticResource ChromeBrush}"
+            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0">
+      <StackPanel Orientation="Horizontal" Spacing="18" Margin="16,6">
+        <TextBlock FontSize="11.5" Foreground="{StaticResource TextSecondaryBrush}">
+          <Run Text="共 " /><Run Text="{Binding TotalCount, Mode=OneWay}" /><Run Text=" 张" />
+        </TextBlock>
+        <TextBlock FontSize="11.5" Foreground="#0A84FF">
+          <Run Text="入选 " /><Run Text="{Binding PickCount, Mode=OneWay}" />
+        </TextBlock>
+        <TextBlock FontSize="11.5" Foreground="#C93B3B">
+          <Run Text="排除 " /><Run Text="{Binding RejectCount, Mode=OneWay}" />
+        </TextBlock>
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

@@ -7,10 +7,10 @@ namespace PictureBook.UI.Views;
 
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    public MainWindow(ShellViewModel vm)
     {
         InitializeComponent();
-        DataContext = new ShellViewModel();
+        DataContext = vm;
         Opened += OnOpenedHandler;
     }
 

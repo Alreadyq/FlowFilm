@@ -37,8 +37,10 @@ public sealed class FeatureNavItem : INotifyPropertyChanged
 
 public sealed class ShellViewModel : INotifyPropertyChanged
 {
-    public ShellViewModel()
+    public ShellViewModel(LibraryViewModel? library)
     {
+        Library = library;
+
         Features =
         [
             new FeatureNavItem("library", "图库",
@@ -50,7 +52,7 @@ public sealed class ShellViewModel : INotifyPropertyChanged
                     "缩略图磁盘缓存 + 内存 LRU，SQLite 持久图库与图集",
                     "旗标 P / X / U，检索与筛选",
                 ],
-                "结构骨架已就绪"),
+                "可用"),
 
             new FeatureNavItem("film", "胶片",
                 "spektrafilm 胶片模拟",
@@ -99,8 +101,14 @@ public sealed class ShellViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(SelectedSubtitle));
             OnPropertyChanged(nameof(SelectedCapabilities));
             OnPropertyChanged(nameof(SelectedStatus));
+            OnPropertyChanged(nameof(IsLibrary));
         }
     }
+
+    public LibraryViewModel? Library { get; }
+
+    /// <summary>当前导航的是图库且服务就绪 —— 主内容区据此切换到网格视图。</summary>
+    public bool IsLibrary => Selected.Id == "library" && Library is not null;
 
     public string SelectedTitle => Selected.Title;
     public string SelectedSubtitle => Selected.Subtitle;
