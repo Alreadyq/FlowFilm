@@ -27,8 +27,20 @@ public sealed class FilmViewModel : INotifyPropertyChanged
 
     public LibraryViewModel Library { get; }
 
-    /// <summary>底部胶片条（平铺全部照片）。</summary>
+    /// <summary>底部胶片条（优先显示流转工作集，否则全部照片）。</summary>
     public ObservableCollection<PhotoTile> Strip { get; } = [];
+
+    /// <summary>从图库流转过来的工作集（胶片处理对象）。</summary>
+    public ObservableCollection<PhotoTile> WorkingSet { get; } = [];
+
+    public bool HasWorkingSet => WorkingSet.Count > 0;
+
+    public string WorkingSetSummary => HasWorkingSet
+        ? $"处理队列 {WorkingSet.Count} 张"
+        : "队列为空：在图库勾选照片后点「流转到胶片」";
+
+    /// <summary>用户请求把处理队列一键流转到索引图。</summary>
+    public event Action? FlowToSheetRequested;
 
     /// <summary>规划接入的胶片型号（待 lut-bake 烘焙后逐个点亮）。</summary>
     public IReadOnlyList<string> Stocks { get; } =
@@ -48,7 +60,8 @@ public sealed class FilmViewModel : INotifyPropertyChanged
     private void RebuildStrip()
     {
         Strip.Clear();
-        foreach (var tile in Library.FlatTiles)
+        var source = HasWorkingSet ? WorkingSet : Library.FlatTiles;
+        foreach (var tile in source)
         {
             Strip.Add(tile);
         }
@@ -58,6 +71,33 @@ public sealed class FilmViewModel : INotifyPropertyChanged
 
     /// <summary>胶片条点击 → 全局选中。</summary>
     public void Select(PhotoTile tile) => Library.Select(tile);
+
+    /// <summary>接收图库流转过来的照片（流转链第 1 → 2 步）。</summary>
+    public void SetWorkingSet(IReadOnlyList<PhotoTile> tiles)
+    {
+        WorkingSet.Clear();
+        foreach (var tile in tiles)
+        {
+            WorkingSet.Add(tile);
+        }
+
+        OnPropertyChanged(nameof(HasWorkingSet));
+        OnPropertyChanged(nameof(WorkingSetSummary));
+        RebuildStrip();
+        if (WorkingSet.Count > 0)
+        {
+            Library.Select(WorkingSet[0]);
+        }
+    }
+
+    /// <summary>一键流转到索引图（流转链第 2 → 3 步）。</summary>
+    public void RequestFlowToSheet()
+    {
+        if (HasWorkingSet)
+        {
+            FlowToSheetRequested?.Invoke();
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

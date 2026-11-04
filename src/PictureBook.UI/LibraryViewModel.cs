@@ -27,6 +27,7 @@ public sealed class PhotoTile : INotifyPropertyChanged
     private bool _isLoading;
     private bool _isFailed;
     private bool _isSelected;
+    private bool _isChecked;
     private int _loadedSize;
     private int _pixelSize = 176;
     private ThumbnailCache? _cache;
@@ -67,6 +68,13 @@ public sealed class PhotoTile : INotifyPropertyChanged
     {
         get => _isSelected;
         set { _isSelected = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>是否被勾选进「流转」集合（图库 → 胶片 → 索引图 的流转链）。</summary>
+    public bool IsChecked
+    {
+        get => _isChecked;
+        set { _isChecked = value; OnPropertyChanged(); }
     }
 
     /// <summary>瓦片边长（正方形格子），由视图模型在重建行时设置。</summary>
@@ -430,6 +438,67 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         RefreshCounts();
     }
 
+    // ---- 流转链：图库勾选 → 胶片 → 索引图 ----
+
+    private readonly List<PhotoTile> _flowChecked = [];
+
+    /// <summary>用户请求把勾选照片流转到胶片工作台。</summary>
+    public event Action? FlowRequested;
+
+    public int FlowCount => _flowChecked.Count;
+
+    public bool FlowBarVisible => FlowCount > 0;
+
+    public string FlowCountText => $"已选 {FlowCount} 张";
+
+    /// <summary>勾选/取消一张照片进入流转集合。</summary>
+    public void ToggleFlow(PhotoTile tile)
+    {
+        if (_flowChecked.Remove(tile))
+        {
+            tile.IsChecked = false;
+        }
+        else
+        {
+            _flowChecked.Add(tile);
+            tile.IsChecked = true;
+        }
+
+        OnPropertyChanged(nameof(FlowCount));
+        OnPropertyChanged(nameof(FlowBarVisible));
+        OnPropertyChanged(nameof(FlowCountText));
+    }
+
+    public void ClearFlow()
+    {
+        foreach (var tile in _flowChecked)
+        {
+            tile.IsChecked = false;
+        }
+
+        _flowChecked.Clear();
+        OnPropertyChanged(nameof(FlowCount));
+        OnPropertyChanged(nameof(FlowBarVisible));
+        OnPropertyChanged(nameof(FlowCountText));
+    }
+
+    /// <summary>取走勾选照片并清空勾选态（网格重建时勾选按照片 Id 保留）。</summary>
+    public IReadOnlyList<PhotoTile> TakeFlow()
+    {
+        var result = _flowChecked.ToArray();
+        ClearFlow();
+        return result;
+    }
+
+    /// <summary>触发流转（视图层按钮调用）。</summary>
+    public void RequestFlow()
+    {
+        if (FlowCount > 0)
+        {
+            FlowRequested?.Invoke();
+        }
+    }
+
     public async Task ImportAsync(string folder)
     {
         if (IsBusy)
@@ -512,6 +581,8 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         var cols = Columns;
         var buffer = new List<PhotoTile>(cols);
         var flat = new List<PhotoTile>();
+        var checkedIds = _flowChecked.Select(t => t.Photo.Id).ToHashSet();
+        var newChecked = new List<PhotoTile>();
         foreach (var photo in source)
         {
             var tile = new PhotoTile(photo, flagWrite) { PixelSize = _tileSize };
@@ -519,6 +590,12 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
             {
                 tile.IsSelected = true;
                 _selectedTile = tile; // 重建后选中态迁移到新瓦片实例
+            }
+
+            if (checkedIds.Contains(photo.Id))
+            {
+                tile.IsChecked = true;
+                newChecked.Add(tile);
             }
 
             flat.Add(tile);
@@ -534,6 +611,9 @@ public sealed class LibraryViewModel : INotifyPropertyChanged
         {
             Rows.Add(new TileRow(buffer.ToArray()));
         }
+
+        _flowChecked.Clear();
+        _flowChecked.AddRange(newChecked);
 
         FlatTiles = flat;
         TilesChanged?.Invoke();

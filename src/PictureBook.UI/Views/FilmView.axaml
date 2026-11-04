@@ -43,6 +43,13 @@
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="Padding" Value="5,1" />
     </Style>
+    <Style Selector="Button.primaryflow">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="Button.primaryflow:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="#664C8DFF" />
+    </Style>
 
   </UserControl.Styles>
 
@@ -64,8 +71,9 @@
                     VerticalAlignment="Center" Spacing="10">
           <TextBlock Text="胶片工作台" FontSize="20" FontWeight="SemiBold"
                      Foreground="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" />
-          <TextBlock Text="到「图库」选中一张照片，这里显示胶片模拟预览。" FontSize="12.5"
-                     Foreground="{StaticResource TextTertiaryBrush}" HorizontalAlignment="Center" />
+          <TextBlock Text="到「图库」勾选几张照片，点底部「流转到胶片」，这里就是处理队列。" FontSize="12.5"
+                     Foreground="{StaticResource TextTertiaryBrush}" HorizontalAlignment="Center"
+                     TextAlignment="Center" MaxWidth="420" TextWrapping="Wrap" />
           <TextBlock Text="预览走离线烘焙的 65³ LUT（四面体插值）；导出时由 Python 物理仿真引擎出 16-bit 母版。"
                      FontSize="11.5" Foreground="{StaticResource TextTertiaryBrush}"
                      HorizontalAlignment="Center" Opacity="0.85" />
@@ -77,6 +85,22 @@
               BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1,0,0,0">
         <ScrollViewer>
           <StackPanel Margin="14,14,14,14" Spacing="12">
+            <!-- 流转队列状态 -->
+            <Border Background="#264C8DFF" BorderBrush="#554C8DFF" BorderThickness="1"
+                    CornerRadius="9" Padding="11,9" IsVisible="{Binding HasWorkingSet}">
+              <StackPanel Spacing="8">
+                <TextBlock Text="{Binding WorkingSetSummary}" FontSize="12.5" FontWeight="SemiBold"
+                           Foreground="White" />
+                <Button Classes="primaryflow" Content="一键流转到索引图 →"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        Padding="0,7" CornerRadius="7" FontSize="12.5" FontWeight="SemiBold"
+                        Click="OnFlowToSheetClick" />
+              </StackPanel>
+            </Border>
+            <TextBlock Text="{Binding WorkingSetSummary}" FontSize="11.5"
+                       Foreground="{StaticResource TextTertiaryBrush}" TextWrapping="Wrap"
+                       IsVisible="{Binding !HasWorkingSet}" />
+
             <TextBlock Classes="panelhead" Text="胶片型号" />
             <ItemsControl ItemsSource="{Binding Stocks}">
               <ItemsControl.ItemTemplate>

@@ -37,4 +37,10 @@ public partial class FilmView : UserControl
             Vm?.Select(tile);
         }
     }
+
+    /// <summary>一键流转：处理队列 → 索引图（Shell 订阅事件完成跳转）。</summary>
+    private void OnFlowToSheetClick(object? sender, RoutedEventArgs e)
+    {
+        Vm?.RequestFlowToSheet();
+    }
 }

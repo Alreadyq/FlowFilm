@@ -7,12 +7,11 @@
         Background="{StaticResource CanvasBrush}">
 
   <Window.Resources>
-    <ControlTheme x:Key="TabTheme" TargetType="RadioButton">
-      <Setter Property="Padding" Value="14,5" />
-      <Setter Property="CornerRadius" Value="7" />
-      <Setter Property="FontSize" Value="13" />
-      <Setter Property="FontWeight" Value="Medium" />
-      <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+    <!-- 左侧竖排模块卡：编号 + 标题 + 副标题 -->
+    <ControlTheme x:Key="RailTabTheme" TargetType="RadioButton">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Background" Value="Transparent" />
       <Setter Property="Template">
         <ControlTemplate>
           <ContentPresenter x:Name="PART_ContentPresenter"
@@ -21,55 +20,66 @@
                             BorderThickness="{TemplateBinding BorderThickness}"
                             CornerRadius="{TemplateBinding CornerRadius}"
                             Padding="{TemplateBinding Padding}"
-                            Content="{TemplateBinding Content}"
-                            HorizontalContentAlignment="Center"
-                            VerticalContentAlignment="Center" />
+                            Content="{TemplateBinding Content}" />
         </ControlTemplate>
       </Setter>
-      <Style Selector="^:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#1FFFFFFF" />
+      <Style Selector="^ /template/ ContentPresenter">
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
       </Style>
-      <Style Selector="^:checked">
-        <Setter Property="Background" Value="#3D4C8DFF" />
-        <Setter Property="Foreground" Value="White" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+      <Style Selector="^:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#14FFFFFF" />
+      </Style>
+      <Style Selector="^:checked /template/ ContentPresenter">
+        <Setter Property="Background" Value="#264C8DFF" />
+        <Setter Property="BorderBrush" Value="#664C8DFF" />
       </Style>
     </ControlTheme>
   </Window.Resources>
 
-  <Grid RowDefinitions="Auto,*">
+  <Grid ColumnDefinitions="86,*">
 
-    <!-- 顶栏：品牌 + 模块切换 -->
-    <Border Background="{StaticResource ChromeBrush}"
-            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,0,1">
-      <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="16,9">
-        <StackPanel Orientation="Horizontal" Spacing="7" VerticalAlignment="Center" Margin="0,0,20,0">
-          <Ellipse Width="9" Height="9" Fill="{StaticResource AccentBrush}"
-                   VerticalAlignment="Center" />
-          <TextBlock Text="PictureBook" FontSize="14.5" FontWeight="Bold" />
-        </StackPanel>
-        <ItemsControl Grid.Column="1" ItemsSource="{Binding Tabs}" VerticalAlignment="Center">
+    <!-- 左侧模块轨道 -->
+    <Border Background="{StaticResource SidebarBrush}"
+            BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,0,1,0">
+      <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="10,14,10,12">
+        <Panel HorizontalAlignment="Center" Margin="0,0,0,16">
+          <Ellipse Width="10" Height="10" Fill="{StaticResource AccentBrush}" />
+        </Panel>
+
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Tabs}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="4" />
+              <StackPanel Orientation="Vertical" Spacing="8" />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <RadioButton Theme="{StaticResource TabTheme}" GroupName="module"
-                           Content="{Binding Title}"
+              <RadioButton Theme="{StaticResource RailTabTheme}" GroupName="module"
                            IsChecked="{Binding IsActive, Mode=TwoWay}"
-                           Checked="OnTabChecked" />
+                           Checked="OnTabChecked" HorizontalContentAlignment="Center">
+                <StackPanel Spacing="2" Margin="0,9,0,9">
+                  <TextBlock Text="{Binding Step}" FontSize="10" FontWeight="Bold"
+                             Foreground="#99FFFFFF" HorizontalAlignment="Center"
+                             IsVisible="{Binding IsActive}" />
+                  <TextBlock Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold"
+                             Foreground="White" HorizontalAlignment="Center" />
+                  <TextBlock Text="{Binding Subtitle}" FontSize="9"
+                             Foreground="#8CFFFFFF" HorizontalAlignment="Center" />
+                </StackPanel>
+              </RadioButton>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <TextBlock Grid.Column="3" Text="0.2.0 · 本地照片工作台" FontSize="11"
-                   Foreground="{StaticResource TextTertiaryBrush}" VerticalAlignment="Center" />
+
+        <TextBlock Grid.Row="3" Text="0.2.0" FontSize="10"
+                   Foreground="{StaticResource TextTertiaryBrush}"
+                   HorizontalAlignment="Center" Opacity="0.7" />
       </Grid>
     </Border>
 
     <!-- 模块内容 -->
-    <Panel Grid.Row="1">
+    <Panel Grid.Column="1">
       <views:LibraryView IsVisible="{Binding IsLibrary}" DataContext="{Binding Library}" />
       <views:FilmView IsVisible="{Binding IsFilm}" DataContext="{Binding Film}" />
       <views:SheetView IsVisible="{Binding IsSheet}" DataContext="{Binding Sheet}" />

@@ -159,4 +159,18 @@ public partial class LibraryView : UserControl
             Vm?.Select(tile);
         }
     }
+
+    /// <summary>点击瓦片左上角圆圈 = 勾选/取消进流转集合（不改变选中态）。</summary>
+    private void OnFlowCheckTapped(object? sender, RoutedEventArgs e)
+    {
+        if ((sender as Border)?.DataContext is PhotoTile tile)
+        {
+            Vm?.ToggleFlow(tile);
+            e.Handled = true; // 阻止冒泡到瓦片的选中点击
+        }
+    }
+
+    private void OnClearFlowClick(object? sender, RoutedEventArgs e) => Vm?.ClearFlow();
+
+    private void OnFlowToFilmClick(object? sender, RoutedEventArgs e) => Vm?.RequestFlow();
 }

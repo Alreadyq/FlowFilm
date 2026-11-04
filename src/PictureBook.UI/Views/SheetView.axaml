@@ -41,7 +41,38 @@
 
     <!-- 中央预览 -->
     <Panel Background="{StaticResource CanvasBrush}">
-      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+      <!-- 已收到流转帧：横向帧条预览 -->
+      <StackPanel IsVisible="{Binding HasFrames}" Margin="24,20">
+        <TextBlock Text="{Binding FramesSummary}" FontSize="13" FontWeight="SemiBold"
+                   Foreground="{StaticResource AccentBrush}" HorizontalAlignment="Center"
+                   Margin="0,0,0,12" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+          <ItemsControl ItemsSource="{Binding Frames}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="8" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Width="120" Height="90" CornerRadius="6" ClipToBounds="True"
+                        Background="{StaticResource SurfaceBrush}"
+                        BorderBrush="#33FFFFFF" BorderThickness="1"
+                        AttachedToVisualTree="OnFrameAttached"
+                        DetachedFromVisualTree="OnFrameDetached">
+                  <Image Source="{Binding Thumb}" Stretch="UniformToFill" />
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+        <TextBlock Text="帧排入画幅、齿孔与片边字渲染、A4 导出——渲染器下一阶段接入。"
+                   FontSize="11.5" Foreground="{StaticResource TextTertiaryBrush}"
+                   HorizontalAlignment="Center" Margin="0,14,0,0" />
+      </StackPanel>
+
+      <!-- 空态 -->
+      <StackPanel IsVisible="{Binding !HasFrames}" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
         <Panel Width="150" Height="104" HorizontalAlignment="Center" Opacity="0.6">
           <Border BorderBrush="{StaticResource TextTertiaryBrush}" BorderThickness="2"
                   CornerRadius="6" Background="{StaticResource SurfaceBrush}" />

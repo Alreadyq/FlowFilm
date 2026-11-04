@@ -8,14 +8,18 @@ public sealed class FeatureNavItem : INotifyPropertyChanged
 {
     private bool _isActive;
 
-    public FeatureNavItem(string id, string title)
+    public FeatureNavItem(string id, string title, string step, string subtitle)
     {
         Id = id;
         Title = title;
+        Step = step;
+        Subtitle = subtitle;
     }
 
     public string Id { get; }
     public string Title { get; }
+    public string Step { get; }
+    public string Subtitle { get; }
 
     public bool IsActive
     {
@@ -42,12 +46,24 @@ public sealed class ShellViewModel : INotifyPropertyChanged
 
         Tabs =
         [
-            new FeatureNavItem("library", "图库"),
-            new FeatureNavItem("film", "胶片"),
-            new FeatureNavItem("sheet", "索引图"),
+            new FeatureNavItem("library", "图库", "01", "导入 · 选片"),
+            new FeatureNavItem("film", "胶片", "02", "胶片处理"),
+            new FeatureNavItem("sheet", "索引图", "03", "排版 · 导出"),
         ];
         Tabs[0].IsActive = true;
         _selected = Tabs[0];
+
+        // 流转链：图库勾选 → 胶片 → 索引图
+        Library.FlowRequested += () =>
+        {
+            Film.SetWorkingSet(Library.TakeFlow());
+            NavigateTo("film");
+        };
+        Film.FlowToSheetRequested += () =>
+        {
+            Sheet.SetFrames(Film.WorkingSet.ToArray());
+            NavigateTo("sheet");
+        };
     }
 
     public IReadOnlyList<FeatureNavItem> Tabs { get; }
@@ -81,6 +97,16 @@ public sealed class ShellViewModel : INotifyPropertyChanged
     public bool IsLibrary => Selected.Id == "library";
     public bool IsFilm => Selected.Id == "film";
     public bool IsSheet => Selected.Id == "sheet";
+
+    /// <summary>程序化切换模块（流转链用）。</summary>
+    public void NavigateTo(string id)
+    {
+        var tab = Tabs.FirstOrDefault(t => t.Id == id);
+        if (tab is not null)
+        {
+            Selected = tab;
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 

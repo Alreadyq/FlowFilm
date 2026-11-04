@@ -151,6 +151,58 @@
       <Setter Property="Opacity" Value="1" />
     </Style>
 
+    <!-- 流转勾选角标 -->
+    <Style Selector="Border.flowcheck">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="Background" Value="#66000000" />
+      <Setter Property="BorderBrush" Value="#B3FFFFFF" />
+      <Setter Property="BorderThickness" Value="1.5" />
+      <Setter Property="HorizontalAlignment" Value="Left" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+      <Setter Property="Margin" Value="8" />
+      <Setter Property="Opacity" Value="0" />
+      <Setter Property="Transitions">
+        <Transitions>
+          <DoubleTransition Property="Opacity" Duration="0:0:0.12" />
+        </Transitions>
+      </Setter>
+      <Setter Property="ZIndex" Value="3" />
+    </Style>
+    <Style Selector="Border.tile:pointerover Border.flowcheck">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="Border.flowcheck.on">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="#FFFFFFFF" />
+    </Style>
+    <Style Selector="Border.flowcheck TextBlock">
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="Border.flowcheck.on TextBlock">
+      <Setter Property="IsVisible" Value="True" />
+    </Style>
+
+    <!-- 底部流转操作条 -->
+    <Style Selector="Border.flowbar">
+      <Setter Property="Background" Value="#F01B1C21" />
+      <Setter Property="BorderBrush" Value="#33FFFFFF" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="16,10" />
+      <Setter Property="Margin" Value="0,0,0,18" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Bottom" />
+      <Setter Property="BoxShadow" Value="0 6 24 #66000000" />
+    </Style>
+
     <!-- 信息面板 -->
     <Style Selector="TextBlock.infokey">
       <Setter Property="FontSize" Value="11.5" />
@@ -266,6 +318,10 @@
                               <TextBlock Text="{Binding ExtBadge}" />
                             </Border>
                           </Panel>
+                          <Border Classes="flowcheck" Classes.on="{Binding IsChecked}"
+                                  Tapped="OnFlowCheckTapped">
+                            <TextBlock Text="✓" />
+                          </Border>
                           <Border Classes="flagbadge" Classes.reject="{Binding IsReject}"
                                   IsVisible="{Binding HasFlag}">
                             <TextBlock Text="{Binding FlagText}" />
@@ -293,6 +349,20 @@
             </ItemsControl.ItemTemplate>
           </ItemsControl>
         </ScrollViewer>
+
+        <!-- 底部流转操作条：勾选照片后出现 -->
+        <Border Classes="flowbar" IsVisible="{Binding FlowBarVisible}">
+          <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+            <TextBlock Text="{Binding FlowCountText}" FontSize="13" FontWeight="SemiBold"
+                       Foreground="White" VerticalAlignment="Center" />
+            <TextBlock Text="→ 胶片处理" FontSize="12"
+                       Foreground="{StaticResource TextTertiaryBrush}" VerticalAlignment="Center" />
+            <Button Content="清空" Padding="11,6" CornerRadius="7" FontSize="12.5"
+                    Click="OnClearFlowClick" />
+            <Button Classes="tool primary" Content="流转到胶片 →" Padding="14,7"
+                    Click="OnFlowToFilmClick" />
+          </StackPanel>
+        </Border>
 
         <StackPanel IsVisible="{Binding EmptyVisible}" HorizontalAlignment="Center"
                     VerticalAlignment="Center" Spacing="14">
